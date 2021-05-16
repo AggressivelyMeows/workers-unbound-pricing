@@ -10,6 +10,12 @@ Vue.use(Oruga,{
         override: true,
         rootClass: 'button rounded-md',
         roundedClass: 'btn-rounded',
+    },
+    modal: {
+      contentClass: 'card ~neutral !low p-4',
+    },
+    input: {
+      inputClass: 'my-2 field'
     }
   }
 )
