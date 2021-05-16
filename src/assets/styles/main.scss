@@ -1,0 +1,22 @@
+$primary: #9561e2;
+$field-margin-bottom: 2em;
+
+@import '@oruga-ui/oruga/src/scss/oruga-full.scss';
+
+@tailwind preflight;
+@tailwind components;
+@tailwind utilities;
+
+.title {
+    @apply font-sans font-bold text-2xl;
+}
+
+.subtitle {
+    @apply font-semibold text-lg;
+}
+
+:root {
+    --oruga-variant-primary: green;
+    --oruga-variant-danger: red;
+}
+  

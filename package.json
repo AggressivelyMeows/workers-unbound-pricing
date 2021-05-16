@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --host 0.0.0.0",
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "@oruga-ui/oruga": "^0.4.0",
     "core-js": "^3.6.5",
+    "humanize": "0.0.9",
+    "humanize-plus": "^1.8.2",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0"
   },
@@ -17,6 +20,8 @@
     "@vue/cli-service": "~4.5.0",
     "sass": "^1.26.5",
     "sass-loader": "^8.0.2",
+    "tailwindcss": "^0.6.1",
+    "vue-cli-plugin-tailwindcss": "~0.1.1",
     "vue-template-compiler": "^2.6.11"
   }
 }
