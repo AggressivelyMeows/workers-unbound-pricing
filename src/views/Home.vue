@@ -11,7 +11,7 @@
             <o-field class="mt-8" label="URL of the Worker" message="Please make sure it is publicly accessable, otherwise we cant check it!">
                 <input class="field my-2" v-model="preview_url" @keypress.enter="test_preview"></input>
             </o-field>
-            <a @click="test_preview" class="rounded-lg w-full flex items-center justify-center bg-purple text-white mr-2 px-4 py-2 cursor-pointer flex flex-row items-center" style="border-radius:0.375rem;">
+            <a @click="test_preview_click" class="rounded-lg w-full flex items-center justify-center bg-purple text-white mr-2 px-4 py-2 cursor-pointer flex flex-row items-center" style="border-radius:0.375rem;">
                 Test URL
             </a>
         </o-modal>
@@ -74,13 +74,6 @@
                 </svg>
                 Test Worker
             </a>
-
-            <a class="rounded-lg bg-purple text-white px-4 py-2 cursor-pointer flex flex-row items-center" style="border-radius:0.375rem;" @click="share">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                Share
-            </a>
         </div>
         <o-field v-if="ready" class="mb-4" :label="`How many requests do you expect to process per month? ($${(pricing.requests / 100).toFixed(2)})`" message="Includes errors, redirects, and successful requests. Costs $0.15/million requests.">
             <o-slider v-if="mode == 'simple'" v-model="amount_of_reqs" :max="10000000" :step="100000"></o-slider>
@@ -91,7 +84,7 @@
             <o-slider v-if="mode == 'simple'" v-model="seconds_per_req" :max="30" :step="0.25" :min="0.25" :custom-formatter="val => val + ' seconds'"></o-slider>
             <input v-if="mode == 'advanced'" type="number" class="field w-full my-2" :min="0.50" v-model="seconds_per_req" ></input>
         </o-field>
-        
+
         <o-field v-if="ready" class="mb-4" :label="`How much data are you sending per request? (${pricing.egress_out}GB) ($${(pricing.egress / 100).toFixed(2)})`" :message="`${mode == 'advanced' ? 'Advanced mode: This input accepts the length of bytes only, you need to need to convert from KB/MB/GB to bytes first! ' : ''}Any data your Worker receives or sends out. Costs $0.045/GB.`">
             <o-slider v-if="mode == 'simple'" v-model="egress" :max="Math.max(128000, egress)" :step="1024" :min="1024" :custom-formatter="val => humanize.filesize(val)"></o-slider>
             <input v-if="mode == 'advanced'" type="number" class="field w-full my-2" v-model="egress" ></input>
@@ -143,6 +136,10 @@
             egress() {this.work_out_cost()},
         },
         methods: {
+            test_preview_click() {
+                plausible('worker_preview')
+                this.test_preview()
+            },
             async test_preview() {
                 this.loading_preview = true
                 var resp = await fetch('https://unbound-pricing-worker.sponsus.workers.dev/', { method: 'POST', body: JSON.stringify({ url: this.preview_url }), headers: {'Content-Type':'application/json'} }).then(resp => resp.json())
@@ -160,12 +157,16 @@
                 this.egress = resp.response_size
 
                 this.show_preview_modal = false
-                this.preview_url = ''
-
-                this.share()
+                
+                this.$nextTick(() => {
+                    // Append the preview url to the URL, then call share(). This will then also append the stats object.
+                    this.$router.replace({ path: '/', query: { url: this.preview_url }})
+                    this.preview_url = ''
+                })
             },
-            share() {
-                this.$router.push({ path: '/', query: { rpm: this.amount_of_reqs, spr: this.seconds_per_req, egress: this.egress }})
+            share(extra) {
+                if (extra === undefined ) {var extra = {}}
+                this.$router.replace({ path: '/', query: { rpm: this.amount_of_reqs, spr: this.seconds_per_req, egress: this.egress, url: this.$route.query.url || '' }})
             },
             setMeta() {
                 document.querySelectorAll('[data-metadata]').forEach(el => el.remove())
@@ -225,6 +226,7 @@
                 this.total = total
 
                 this.setMeta()
+                this.share()
             },
         },
         mounted() {
@@ -233,6 +235,13 @@
             this.egress = parseInt(this.$route.query.egress || '1024')
             this.ready = true
             this.$nextTick(this.work_out_cost)
+
+            setTimeout(() => {
+                if (this.$route.query.url) {
+                    this.preview_url = this.$route.query.url
+                    this.test_preview()
+                }
+            }, 50)
         },
         components: {
             VueNumeric,
