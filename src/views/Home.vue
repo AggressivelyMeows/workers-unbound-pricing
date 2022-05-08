@@ -43,13 +43,12 @@
                 Even if your Worker has an error, it will count towards this number.
                 <br/><br/>
                 <b>🐏 Memory:</b> First 400,000-GBs is free. Each Worker you execute uses 128mb of memory, this is not changable yet. You are charged per millisecond the Worker runs.<br/><br/>
-                <b>⚡ Egress (Bandwidth):</b> First 5GB free, costs $0.045 per Gigabyte sent to/from your Worker.<br/>
             </p>
         </div>
         <hr/>
         <div class="flex flex-row mb-8 items-center">
             <h1 class="title text-purple block  flex-grow">
-                Total: ${{(total / 100).toFixed(2)}}
+                Total: $5 (Paid Worker plan) + ${{(total / 100).toFixed(2)}}
             </h1>
 
             <a v-if="mode == 'advanced'" @click="mode = 'simple'" class="rounded-lg bg-purple text-white mr-2 px-4 py-2 cursor-pointer flex flex-row items-center" style="border-radius:0.375rem;">
@@ -85,11 +84,6 @@
             <input v-if="mode == 'advanced'" type="number" class="field w-full my-2" :min="0.50" v-model="seconds_per_req" ></input>
         </o-field>
 
-        <o-field v-if="ready" class="mb-4" :label="`How much data are you sending per request? (${pricing.egress_out}GB) ($${(pricing.egress / 100).toFixed(2)})`" :message="`${mode == 'advanced' ? 'Advanced mode: This input accepts the length of bytes only, you need to need to convert from KB/MB/GB to bytes first! ' : ''}Any data your Worker receives or sends out. Costs $0.045/GB.`">
-            <o-slider v-if="mode == 'simple'" v-model="egress" :max="Math.max(128000, egress)" :step="1024" :min="1024" :custom-formatter="val => humanize.filesize(val)"></o-slider>
-            <input v-if="mode == 'advanced'" type="number" class="field w-full my-2" v-model="egress" ></input>
-        </o-field>
-
         <div class="mt-24">
             <p class="text-grey-dark text-center text-xs">
                 This website is not affliated with Cloudflare. Information on this page is just an estimate and your prices may be different to the results.<br/>
@@ -115,16 +109,13 @@
             pricing: {
                 requests: 0,
                 memory: 0,
-                egress: 0,
             },
             rates: {
                 requests: 15,
                 memory: 1250,
-                egress: 4.5,
             },
             amount_of_reqs: 100000,
             seconds_per_req: 1,
-            egress: 1024,
             total: 0,
             preview_url: '',
             loading_preview: false,
@@ -133,7 +124,6 @@
         watch: {
             amount_of_reqs() {this.work_out_cost()},
             seconds_per_req() {this.work_out_cost()},
-            egress() {this.work_out_cost()},
         },
         methods: {
             test_preview_click() {
@@ -154,7 +144,6 @@
                 })
 
                 this.seconds_per_req = resp.time_taken
-                this.egress = resp.response_size
 
                 this.show_preview_modal = false
                 
@@ -166,7 +155,7 @@
             },
             share(extra) {
                 if (extra === undefined ) {var extra = {}}
-                this.$router.replace({ path: '/', query: { rpm: this.amount_of_reqs, spr: this.seconds_per_req, egress: this.egress, url: this.$route.query.url || '' }})
+                this.$router.replace({ path: '/', query: { rpm: this.amount_of_reqs, spr: this.seconds_per_req, url: this.$route.query.url || '' }})
             },
             setMeta() {
                 document.querySelectorAll('[data-metadata]').forEach(el => el.remove())
@@ -181,12 +170,12 @@
                 }
 
                 create_tag('title', 'Cloudflare Workers: Unbound pricing calculator')
-                create_tag('description', `Requests per month: $${(this.pricing.requests / 100).toFixed(2)}\nMemory used: $${(this.pricing.memory / 100).toFixed(2)}\nEgress: $${(this.pricing.egress / 100).toFixed(2)}\nTotal per month: $${(this.total / 100).toFixed(2)}`)
+                create_tag('description', `Requests per month: $${(this.pricing.requests / 100).toFixed(2)}\nMemory used: $${(this.pricing.memory / 100).toFixed(2)}\nTotal per month: $5 (Paid Worker plan) + $${(this.total / 100).toFixed(2)}`)
                 create_tag('theme-color', '#9561e2')
             },
             work_out_cost() {
                 if (!this.ready) {return}
-                var total = 500 // $5 minimum payment required.
+                var total = 0
 
                 // If amount of requests is under 1 mil, ignore.
                 if (this.amount_of_reqs > 1000000) {
@@ -210,19 +199,6 @@
 
                 total += this.pricing.memory
 
-                // Work out egress costs
-                // We count egress in bytes so first convert Bytes to Gigabytes.
-                var one_gigabyte = 1000000000
-                var gigabyte_per_request = (this.egress  * this.amount_of_reqs) / one_gigabyte
-                gigabyte_per_request = gigabyte_per_request - 5
-
-                var egress_cost = (Math.max(gigabyte_per_request, 0)) * (this.rates.egress)
-
-                this.pricing.egress = egress_cost
-                this.pricing.egress_out = (Math.max(gigabyte_per_request, 0)).toFixed(2)
-
-                total = total + egress_cost
-
                 this.total = total
 
                 this.setMeta()
@@ -232,7 +208,6 @@
         mounted() {
             this.amount_of_reqs = parseInt(this.$route.query.rpm || '100000')
             this.seconds_per_req = parseFloat(this.$route.query.spr || '1')
-            this.egress = parseInt(this.$route.query.egress || '1024')
             this.ready = true
             this.$nextTick(this.work_out_cost)
 
