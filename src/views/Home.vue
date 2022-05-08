@@ -42,9 +42,7 @@
                 First 1 million requests are free, these are counted if they hit your Worker. With DDoS protection, any requests rejected by Cloudflare will NOT count towards this number.
                 Even if your Worker has an error, it will count towards this number.
                 <br/><br/>
-                <b>🐏 Memory:</b> First 400,000-GBs is free. Each Worker you execute uses 128mb of memory, this is not changable yet. You are charged per millisecond the Worker runs.<br/><br/>
-                <b>⚡ Egress (Bandwidth):</b> First 5GB free, costs $0.045 per Gigabyte sent to/from your Worker.<br/>
-            </p>
+                <b>🐏 Memory:</b> First 400,000-GBs is free. Each Worker you execute uses 128mb of memory, this is not changable yet. You are charged per millisecond the Worker runs.<br/><br/>            </p>
         </div>
         <hr/>
         <div class="flex flex-row mb-8 items-center">
@@ -85,11 +83,6 @@
             <input v-if="mode == 'advanced'" type="number" class="field w-full my-2" :min="0.50" v-model="seconds_per_req" ></input>
         </o-field>
 
-        <o-field v-if="ready" class="mb-4" :label="`How much data are you sending per request? (${pricing.egress_out}GB) ($${(pricing.egress / 100).toFixed(2)})`" :message="`${mode == 'advanced' ? 'Advanced mode: This input accepts the length of bytes only, you need to need to convert from KB/MB/GB to bytes first! ' : ''}Any data your Worker receives or sends out. Costs $0.045/GB.`">
-            <o-slider v-if="mode == 'simple'" v-model="egress" :max="Math.max(128000, egress)" :step="1024" :min="1024" :custom-formatter="val => humanize.filesize(val)"></o-slider>
-            <input v-if="mode == 'advanced'" type="number" class="field w-full my-2" v-model="egress" ></input>
-        </o-field>
-
         <div class="mt-24">
             <p class="text-grey-dark text-center text-xs">
                 This website is not affliated with Cloudflare. Information on this page is just an estimate and your prices may be different to the results.<br/>
@@ -120,7 +113,7 @@
             rates: {
                 requests: 15,
                 memory: 1250,
-                egress: 4.5,
+                egress: 0,
             },
             amount_of_reqs: 100000,
             seconds_per_req: 1,
