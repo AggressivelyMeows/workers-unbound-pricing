@@ -38,10 +38,11 @@
             </b></br>
             <p>
                 Unbound is a bit more complex to calculate costs for and so I have built this tool to help people get a better understanding of the pricing model.<Br/><br/>
-                <b>🚗 Requests:</b>
+                <b>⚡ Requests:</b>
                 First 1 million requests are free, these are counted if they hit your Worker. With DDoS protection, any requests rejected by Cloudflare will NOT count towards this number.
                 Even if your Worker has an error, it will count towards this number.
                 <br/><br/>
+                <b>💾 Memory:</b> First 400,000-GBs is free. Each Worker you execute uses 128mb of memory, this is not changable yet. You are charged per millisecond the Worker runs.<br/><br/>
             </p>
         </div>
         <hr/>
